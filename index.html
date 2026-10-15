@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Çokgenler Avı - 5. Sınıf Matematik Oyunu</title>
+    <!-- Tailwind CSS for modern responsive UI -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Fredoka', 'Inter', sans-serif;
+            background: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
+            min-height: 100vh;
+        }
+        .game-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        .floating {
+            animation: float 3s ease-in-out infinite;
+        }
+        @keyframes popIn {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .pop-in {
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+    </style>
+</head>
+<body class="text-slate-800 flex flex-col items-center justify-center p-4">
+
+    <div class="w-full max-w-4xl game-card shadow-2xl rounded-3xl p-6 md:p-8 my-4 relative overflow-hidden border-4 border-white/40">
+        
+        <!-- Decorative Header Elements -->
+        <div class="absolute -top-10 -right-10 w-32 h-32 bg-pink-400 rounded-full opacity-25 pointer-events-none"></div>
+        <div class="absolute -bottom-10 -left-10 w-32 h-32 bg-indigo-400 rounded-full opacity-25 pointer-events-none"></div>
+
+        <!-- Header / Scoreboard -->
+        <header class="flex flex-col md:flex-row justify-between items-center mb-6 pb-4 border-b border-slate-200 gap-4">
+            <div class="flex items-center space-x-3">
+                <div class="w-12 h-12 bg-gradient-to-tr from-indigo-500 to-pink-500 rounded-2xl flex items-center justify-center text-white text-2xl shadow-lg floating">
+                    <i class="fa-solid fa-shapes"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl md:text-3xl font-bold bg-gradient-to-r from-indigo-600 to-pink-600 bg-clip-text text-transparent">Çokgenler Avı</h1>
+                    <p class="text-xs md:text-sm text-slate-500 font-semibold">5. Sınıf Matematik Eğlence Dünyası</p>
+                </div>
+            </div>
+
+            <!-- Stats Bar -->
+            <div class="flex items-center gap-3 bg-slate-100 p-2 rounded-2xl shadow-inner">
+                <div class="flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-xl shadow-sm text-sm font-bold text-indigo-600">
+                    <i class="fa-solid fa-star text-amber-400"></i>
+                    <span id="scoreVal">0</span> Puan
+                </div>
+                <div class="flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-xl shadow-sm text-sm font-bold text-pink-600">
+                    <i class="fa-solid fa-trophy text-pink-500"></i>
+                    Soru: <span id="currentQVal">1</span>/10
+                </div>
+                <div class="flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-xl shadow-sm text-sm font-bold text-emerald-600">
+                    <i class="fa-solid fa-fire text-orange-500"></i>
+                    Seri: <span id="streakVal">0</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Start Screen -->
+        <div id="startScreen" class="text-center py-10 px-4 pop-in">
+            <div class="max-w-md mx-auto">
+                <div class="text-6xl mb-4 text-indigo-500 floating">
+                    <i class="fa-solid fa-cube"></i>
+                </div>
+                <h2 class="text-2xl md:text-3xl font-bold text-slate-800 mb-3">Çokgen Dünyasına Hoş Geldin!</h2>
+                <p class="text-slate-600 mb-6 text-sm md:text-base leading-relaxed">
+                    Üçgenleri, dörtgenleri, beşgenleri ve çokgenlerin temel elemanlarını (köşegen, kenar, köşe) ne kadar iyi biliyorsun? Hemen test et, puanları topla!
+                </p>
+                <button onclick="startGame()" class="w-full py-4 bg-gradient-to-r from-indigo-600 to-pink-600 text-white font-bold text-lg rounded-2xl shadow-xl hover:opacity-95 transform hover:-translate-y-0.5 transition active:translate-y-0 flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-play"></i> Oyuna Başla
+                </button>
+            </div>
+        </div>
+
+        <!-- Game Play Screen -->
+        <div id="gameScreen" class="hidden">
+            <!-- Question Banner -->
+            <div class="mb-6 bg-indigo-50/80 border border-indigo-100 p-4 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-4">
+                <div class="text-left w-full">
+                    <span class="inline-block px-3 py-1 bg-indigo-100 text-indigo-700 font-bold text-xs rounded-full mb-2 uppercase tracking-wide" id="questionCategory">Kategori</span>
+                    <h3 class="text-lg md:text-xl font-bold text-slate-800" id="questionText">Soru metni buraya gelecek...</h3>
+                </div>
+                <!-- Visual Shape Canvas / Icon Box -->
+                <div id="shapeVisualContainer" class="w-28 h-28 bg-white border-2 border-indigo-200 rounded-2xl flex items-center justify-center shadow-md p-2 flex-shrink-0">
+                    <!-- Dynamic Shape or Illustration -->
+                </div>
+            </div>
+
+            <!-- Options Grid -->
+            <div id="optionsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-3.5 mb-6">
+                <!-- Options injected via JS -->
+            </div>
+
+            <!-- Feedback / Explanation Box -->
+            <div id="feedbackBox" class="hidden p-4 rounded-2xl mb-4 font-medium text-sm flex items-start gap-3 pop-in">
+                <div id="feedbackIcon" class="text-xl mt-0.5"></div>
+                <div>
+                    <h4 id="feedbackTitle" class="font-bold text-base mb-1"></h4>
+                    <p id="feedbackText" class="text-slate-700"></p>
+                </div>
+            </div>
+
+            <!-- Next Button -->
+            <div class="flex justify-end">
+                <button id="nextBtn" onclick="nextQuestion()" class="hidden px-6 py-3 bg-emerald-600 text-white font-bold rounded-xl shadow-lg hover:bg-emerald-700 transition flex items-center gap-2">
+                    Sonraki Soru <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Game Over Screen -->
+        <div id="gameOverScreen" class="hidden text-center py-10 px-4 pop-in">
+            <div class="max-w-md mx-auto">
+                <div class="text-7xl mb-4 text-amber-500 floating">
+                    <i class="fa-solid fa-award"></i>
+                </div>
+                <h2 class="text-3xl font-bold text-slate-800 mb-2">Tebrikler Avcı!</h2>
+                <p class="text-slate-600 mb-6 text-base" id="finalMessage">Çokgenler konusunda harika bir iş çıkardın.</p>
+                
+                <div class="bg-indigo-50 border border-indigo-100 rounded-2xl p-6 mb-6 shadow-inner">
+                    <div class="text-sm font-semibold text-slate-500 uppercase">Toplam Skor</div>
+                    <div class="text-4xl font-extrabold text-indigo-600 my-1" id="finalScoreVal">0</div>
+                    <div class="text-xs text-slate-400">Doğru cevaplarla rozetler kazandın!</div>
+                </div>
+
+                <div class="flex flex-col sm:flex-row gap-3 justify-center">
+                    <button onclick="restartGame()" class="py-3 px-6 bg-gradient-to-r from-indigo-600 to-pink-600 text-white font-bold rounded-xl shadow-lg hover:opacity-95 transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-rotate-right"></i> Yeniden Oyna
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Footer info -->
+    <footer class="text-white/80 text-xs text-center mt-2 font-medium">
+        5. Sınıf Matematik • Eğitici Çokgenler Oyunu
+    </footer>
+
+    <script>
+        // Question Bank for 5th Grade Polygons (Çokgenler)
+        const questions = [
+            {
+                category: "Çokgen Tanımı",
+                text: "Aşağıdakilerden hangisi bir **çokgendir**?",
+                shapeType: "svg-check-polygon",
+                svg: `<svg viewBox="0 0 100 100" class="w-20 h-20"><polygon points="50,10 90,40 75,90 25,90 10,40" fill="#6366f1" opacity="0.2" stroke="#4f46e5" stroke-width="4"/></svg>`,
+                options: [
+                    { text: "Kapalı ve doğru parçalarından oluşan şekil", correct: true },
+                    { text: "Eğri çizgiler içeren şekil", correct: false },
+                    { text: "Açık uçlu çizgilerden oluşan şekil", correct: false },
+                    { text: "Yalnızca dairelerden oluşan şekil", correct: false }
+                ],
+                explanation: "Çokgenler, en az üç doğru parçasının uç uca eklenmesiyle oluşan **kapalı** geometrik şekillerdir."
+            },
+            {
+                category: "Kenar Sayısı",
+                text: "5 kenarı, 5 köşe ve 5 iç açısı olan bir çokgenin adı nedir?",
+                shapeType: "pentagon",
+                svg: `<svg viewBox="0 0 100 100" class="w-20 h-20"><polygon points="50,10 90,40 75,90 25,90 10,40" fill="#ec4899" opacity="0.2" stroke="#db2777" stroke-width="4"/></svg>`,
+                options: [
+                    { text: "Dörtgen", correct: false },
+                    { text: "Beşgen", correct: true },
+                    { text: "Altıgen", correct: false },
+                    { text: "Üçgen", correct: false }
+                ],
+                explanation: "Kenar sayılarına göre isimlendirilirler: 3 kenarlı üçgen, 4 kenarlı dörtgen, 5 kenarlı beşgendir."
+            },
+            {
+                category: "Köşegen",
+                text: "Bir çokgende, komşu olmayan iki köşeyi birleştiren doğru parçasına ne denir?",
+                shapeType: "diagonal",
+                svg: `<svg viewBox="0 0 100 100" class="w-20 h-20"><rect x="15" y="15" width="70" height="70" fill="#3b82f6" opacity="0.1" stroke="#2563eb" stroke-width="4"/><line x1="15" y1="15" x2="85" y2="85" stroke="#ef4444" stroke-width="3" stroke-dasharray="4"/></svg>`,
+                options: [
+                    { text: "Kenar", correct: false },
+                    { text: "Köşegen", correct: true },
+                    { text: "Yükseklik", correct: false },
+                    { text: "Çevre", correct: false }
+                ],
+                explanation: "Komşu olmayan iki köşeyi birleştiren doğru parçasına **köşegen** denir."
+            },
+            {
+                category: "Üçgen Çeşitleri",
+                text: "Bütün kenar uzunlukları eşit olan üçgene ne ad verilir?",
+                shapeType: "equilateral",
+                svg: `<svg viewBox="0 0 100 100" class="w-20 h-20"><polygon points="50,15 90,85 10,85" fill="#10b981" opacity="0.2" stroke="#059669" stroke-width="4"/></svg>`,
+                options: [
+                    { text: "Çeşitkenar Üçgen", correct: false },
+                    { text: "İkizkenar Üçgen", correct: false },
+                    { text: "Eşkenar Üçgen", correct: true },
+                    { text: "Geniş Açılı Üçgen", correct: false }
+                ],
+                explanation: "Tüm kenar uzunlukları birbirine eşit olan üçgenler **eşkenar üçgen** olarak adlandırılır."
+            },
+            {
+                category: "Dörtgenler",
+                text: "Karşılıklı kenar çiftleri birbirine paralel ve tüm iç açıları 90 derece olan dörtgen hangisidir?",
+                shapeType: "rectangle",
+                svg: `<svg viewBox="0 0 100 100" class="w-20 h-20"><rect x="10" y="25" width="80" height="50" fill="#8b5cf6" opacity="0.2" stroke="#7c3aed" stroke-width="4"/></svg>`,
+                options: [
+                    { text: "Yamuk", correct: false },
+                    { text: "Dikdörtgen", correct: true },
+                    { text: "Eşkenar Dörtgen", correct: false },
+                    { text: "Üçgen", correct: false }
+                ],
+                explanation: "Tüm açıları dik (90°) olan ve karşılıklı kenarları eşit olan dörtgen **dikdörtgen**dir."
+            },
+            {
+                category: "Köşegen Sayısı",
+                text: "Bir **dörtgenin** iç bölgesinde kaç tane köşegen çizilebilir?",
+                shapeType: "quad-diag",
+                svg: `<svg viewBox="0 0 100 100" class="w-20 h-20"><rect x="15" y="15" width="70" height="70" fill="#f59e0b" opacity="0.2" stroke="#d97706" stroke-width="4"/><line x1="15" y1="15" x2="85" y2="85" stroke="#dc2626" stroke-width="2"/><line x1="85" y1="15" x2="15" y2="85" stroke="#dc2626" stroke-width="2"/></svg>`,
+                options: [
+                    { text: "1 tane", correct: false },
+                    { text: "2 tane", correct: true },
+                    { text: "4 tane", correct: false },
+                    { text: "0 tane", correct: false }
+                ],
+                explanation: "Bir dörtgende karşılıklı köşeleri birleştiren **2 adet** köşegen bulunur."
+            },
+            {
+                category: "Üçgen Açı Çeşitleri",
+                text: "Bir açısı 90 dereceden büyük olan üçgene ne denir?",
+                shapeType: "obtuse-triangle",
+                svg: `<svg viewBox="0 0 100 100" class="w-20 h-20"><polygon points="10,80 90,80 70,30" fill="#06b6d4" opacity="0.2" stroke="#0891b2" stroke-width="4"/></svg>`,
+                options: [
+                    { text: "Dar Açılı Üçgen", correct: false },
+                    { text: "Dik Açılı Üçgen", correct: false },
+                    { text: "Geniş Açılı Üçgen", correct: true },
+                    { text: "Eşkenar Üçgen", correct: false }
+                ],
+                explanation: "İç açılarından biri 90°'den büyük olan üçgenler **geniş açılı üçgen**dir."
+            },
+            {
+                category: "Yamuk Özelliği",
+                text: "Yalnızca **iki kenarı** birbirine paralel olan dörtgenin adı nedir?",
+                shapeType: "trapezoid",
+                svg: `<svg viewBox="0 0 100 100" class="w-20 h-20"><polygon points="30,20 70,20 90,80 10,80" fill="#14b8a6" opacity="0.2" stroke="#0d9488" stroke-width="4"/></svg>`,
+                options: [
+                    { text: "Kare", correct: false },
+                    { text: "Yamuk", correct: true },
+                    { text: "Paralelkenar", correct: false },
+                    { text: "Dikdörtgen", correct: false }
+                ],
+                explanation: "Karşılıklı kenarlarından yalnızca bir çifti paralel olan dörtgene **yamuk** denir."
+            },
+            {
+                category: "Üçgen Kenar Sınıflandırması",
+                text: "Kenar uzunluklarının **hiçbiri birbirine eşit olmayan** üçgene ne denir?",
+                shapeType: "scalene",
+                svg: `<svg viewBox="0 0 100 100" class="w-20 h-20"><polygon points="15,85 85,85 40,25" fill="#f43f5e" opacity="0.2" stroke="#e11d48" stroke-width="4"/></svg>`,
+                options: [
+                    { text: "Çeşitkenar Üçgen", correct: true },
+                    { text: "İkizkenar Üçgen", correct: false },
+                    { text: "Eşkenar Üçgen", correct: false },
+                    { text: "Dik Üçgen", correct: false }
+                ],
+                explanation: "Üç kenarının uzunluğu da birbirinden farklı olan üçgenler **çeşitkenar üçgen**dir."
+            },
+            {
+                category: "Temel Kavramlar",
+                text: "Aşağıdakilerden hangisi bir **çokgen olamaz**?",
+                shapeType: "non-polygon",
+                svg: `<svg viewBox="0 0 100 100" class="w-20 h-20"><path d="M 20,50 Q 50,10 80,50 T 50,90" fill="none" stroke="#e11d48" stroke-width="4"/><circle cx="50" cy="50" r="30" fill="#fb7185" opacity="0.2" stroke="#e11d48" stroke-width="2" stroke-dasharray="5"/></svg>`,
+                options: [
+                    { text: "Üçgen", correct: false },
+                    { text: "Altıgen", correct: false },
+                    { text: "Daire", correct: true },
+                    { text: "Sekizgen", correct: false }
+                ],
+                explanation: "Daire eğrisel bir sınıra sahiptir; doğru parçalarından oluşmadığı için **çokgen değildir**."
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let streak = 0;
+        let answered = false;
+
+        // DOM Elements
+        const startScreen = document.getElementById('startScreen');
+        const gameScreen = document.getElementById('gameScreen');
+        const gameOverScreen = document.getElementById('gameOverScreen');
+        const scoreVal = document.getElementById('scoreVal');
+        const currentQVal = document.getElementById('currentQVal');
+        const streakVal = document.getElementById('streakVal');
+        const questionCategory = document.getElementById('questionCategory');
+        const questionText = document.getElementById('questionText');
+        const shapeVisualContainer = document.getElementById('shapeVisualContainer');
+        const optionsContainer = document.getElementById('optionsContainer');
+        const feedbackBox = document.getElementById('feedbackBox');
+        const feedbackIcon = document.getElementById('feedbackIcon');
+        const feedbackTitle = document.getElementById('feedbackTitle');
+        const feedbackText = document.getElementById('feedbackText');
+        const nextBtn = document.getElementById('nextBtn');
+        const finalScoreVal = document.getElementById('finalScoreVal');
+        const finalMessage = document.getElementById('finalMessage');
+
+        function startGame() {
+            startScreen.classList.add('hidden');
+            gameScreen.classList.remove('hidden');
+            currentQuestionIndex = 0;
+            score = 0;
+            streak = 0;
+            updateStats();
+            loadQuestion();
+        }
+
+        function updateStats() {
+            scoreVal.textContent = score;
+            currentQVal.textContent = currentQuestionIndex + 1;
+            streakVal.textContent = streak;
+        }
+
+        function loadQuestion() {
+            answered = false;
+            feedbackBox.classList.add('hidden');
+            nextBtn.classList.add('hidden');
+
+            const q = questions[currentQuestionIndex];
+            questionCategory.textContent = q.category;
+            questionText.innerHTML = q.text;
+            shapeVisualContainer.innerHTML = q.svg;
+
+            // Render options
+            optionsContainer.innerHTML = '';
+            q.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = "w-full p-4 text-left bg-white border-2 border-slate-200 hover:border-indigo-400 hover:bg-indigo-50/50 rounded-2xl font-semibold text-slate-700 transition flex items-center justify-between shadow-sm group";
+                btn.innerHTML = `
+                    <span class="flex items-center gap-3">
+                        <span class="w-7 h-7 rounded-xl bg-slate-100 group-hover:bg-indigo-600 group-hover:text-white flex items-center justify-center text-xs font-bold transition">${String.fromCharCode(65 + idx)}</span>
+                        <span>${opt.text}</span>
+                    </span>
+                    <i class="fa-solid fa-chevron-right text-slate-300 group-hover:text-indigo-600 transition"></i>
+                `;
+                btn.onclick = () => selectOption(opt.correct, btn);
+                optionsContainer.appendChild(btn);
+            });
+
+            updateStats();
+        }
+
+        function selectOption(isCorrect, selectedBtn) {
+            if (answered) return;
+            answered = true;
+
+            const allButtons = optionsContainer.querySelectorAll('button');
+            const q = questions[currentQuestionIndex];
+
+            allButtons.forEach((btn, idx) => {
+                btn.disabled = true;
+                if (q.options[idx].correct) {
+                    btn.classList.remove('border-slate-200', 'bg-white');
+                    btn.classList.add('border-emerald-500', 'bg-emerald-50', 'text-emerald-900');
+                } else if (btn === selectedBtn && !isCorrect) {
+                    btn.classList.remove('border-slate-200', 'bg-white');
+                    btn.classList.add('border-rose-500', 'bg-rose-50', 'text-rose-900');
+                }
+            });
+
+            if (isCorrect) {
+                score += 10 + (streak * 2);
+                streak += 1;
+                feedbackBox.className = "p-4 rounded-2xl mb-4 font-medium text-sm flex items-start gap-3 pop-in bg-emerald-50 border border-emerald-200 text-emerald-900";
+                feedbackIcon.innerHTML = '<i class="fa-solid fa-circle-check text-emerald-600"></i>';
+                feedbackTitle.textContent = "Harika! Doğru Cevap 🎉";
+            } else {
+                streak = 0;
+                feedbackBox.className = "p-4 rounded-2xl mb-4 font-medium text-sm flex items-start gap-3 pop-in bg-rose-50 border border-rose-200 text-rose-900";
+                feedbackIcon.innerHTML = '<i class="fa-solid fa-circle-xmark text-rose-600"></i>';
+                feedbackTitle.textContent = "Yanlış Cevap 💡";
+            }
+
+            feedbackText.textContent = q.explanation;
+            feedbackBox.classList.remove('hidden');
+            nextBtn.classList.remove('hidden');
+            updateStats();
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < questions.length) {
+                loadQuestion();
+            } else {
+                endGame();
+            }
+        }
+
+        function endGame() {
+            gameScreen.classList.add('hidden');
+            gameOverScreen.classList.remove('hidden');
+            finalScoreVal.textContent = score;
+
+            if (score >= 90) {
+                finalMessage.textContent = "Mükemmel! Sen gerçek bir Çokgen Avcısısın! 👑";
+            } else if (score >= 60) {
+                finalMessage.textContent = "Çok iyi iş çıkardın! Biraz daha pratikle zirvedesin. 🚀";
+            } else {
+                finalMessage.textContent = "Fena değil! Konuyu tekrar edip tekrar deneyebilirsin. 💪";
+            }
+        }
+
+        function restartGame() {
+            gameOverScreen.classList.add('hidden');
+            startScreen.classList.remove('hidden');
+        }
+    </script>
+
+</body>
+</html>
